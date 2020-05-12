@@ -220,7 +220,7 @@ out_df <- map_dfr(1:runs, function(i){
   sir_out <- ode(init, times, sir_ode, parms)
   
   sir_out_df <- sir_out %>% as.data.frame() %>% 
-    as_tibble() %>% mutate(r0 = r0, id = i)
+    as_tibble() %>% mutate(R_0 = R_0, id = i)
   
   sir_out_df
   
@@ -245,9 +245,6 @@ new_pd <- qs %>% as_tibble() %>%
   spread(qs, H)
 
 new_pd$date  <- new_pd$date %>% as.Date()
-
-
-
 
 ################################################################################
 
