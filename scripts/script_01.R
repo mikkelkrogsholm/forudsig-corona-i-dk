@@ -177,7 +177,7 @@ sir_out_df <- sir_out %>% as.data.frame() %>%
   as_tibble()
 
 sir_out_df$date <- (sir_out_df$time - 1) + (newly_date - days2hosp)
-sir_out_df$date <- (sir_out_df$time - 1) + (newly_date - days2hosp)
+
 
 pd <- sir_out_df %>% 
   select(date, time, S, I, H, R) %>%

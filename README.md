@@ -5,16 +5,18 @@
 
 <!-- badges: start -->
 
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Corona
+prediction](https://img.shields.io/badge/corona%20prediction-v.%201.0-green)
 <!-- badges: end -->
 
 Målet med dette repository er at vise dig, hvordan du kan forudsige
-Corona i Danmark. Jeg vil over de næste par sætninger vise dig noget
-kode, der gør dig i stand til selv forudsige udviklingen af Corona i
-Danmark.
+Corona i Danmark.
 
 Det er vigtigt med åbenhed og gennemsigtighed i en krise. Derfor lægger
 jeg nu dette kode frem. Det er open source og anvender selv udelukkende
-open source programmer og kode, så alle kan efterprøve koden. Jeg synes
+open source programmer og kode, så alle kan efterprøve det. Jeg synes
 ærligt talt det har manglet med åbenhed omkring koden for
 Corona-beregninger i Danmark.
 
@@ -37,8 +39,8 @@ var sort snak, så er du velkommen til at skrive til mig på min email
 
 Jeg kører koden i en docker container. Nærmere betegnet
 [rocker/tidyverse:3.6.1](https://hub.docker.com/r/rocker/tidyverse). Det
-kan du også hvis du vil være sikker på at have præcis de samme
-pakkeinstallationer som mig.
+kan du også gøre, hvis du vil være sikker på at have præcis det samme
+setup som mig.
 
 -----
 
