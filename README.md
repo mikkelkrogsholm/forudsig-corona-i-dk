@@ -44,8 +44,8 @@ pakkeinstallationer som mig.
 
 #### Bibliotekerne (libraries)
 
-Det første vi skal gøre er at loade de biblioteker/pakker vi skal bruge
-til at forudsige Corona i Danmark.
+Det første jeg skal gøre er at loade de biblioteker/pakker jeg skal
+bruge til at forudsige Corona i Danmark.
 
 ``` r
 library(tidyverse)
@@ -53,9 +53,9 @@ library(EpiEstim)
 library(deSolve)
 ```
 
-Vi bruger `tidyverse` suiten af pakker til generel datahåndtering og
-datamanipulation. `EpiEstim` bruger vi til at estimere smittetallet R
-med, og `deSolve` bruger vi til at udregne de ligninger vi skal bruge
+Jeg bruger `tidyverse` suiten af pakker til generel datahåndtering og
+datamanipulation. `EpiEstim` bruger jeg til at estimere smittetallet R
+med, og `deSolve` bruger jeg til at udregne de ligninger jeg skal bruge
 for at forudsige Corona i Danmark.
 
 #### Sær-funktioner
@@ -65,9 +65,12 @@ der ikke allerede findes i R (programmeringssproget), men som jeg
 definerer på forhånd.
 
 Jeg skal bruge en funktion, der kan lave rullende gennemsnit, den kalder
-jeg for `rollmean` og jeg laver en function, der kan skabe en normal
+jeg for `rollmean`. Jeg laver også en funktion, der kan skabe en normal
 fordelt kurve mellem to værdier, den kalder jeg `rnorm.between` (koden
-til den er lånt fra et sted på nettet).
+til den er lånt fra et sted på nettet). Og jeg laver en function, der
+kan udregne [Root Mean Squared Error
+(RMSE)](https://en.wikipedia.org/wiki/Root-mean-square_deviation) - den
+kalder jeg `RMSE`.
 
 ``` r
 rollmean <- function(x, k){
@@ -95,6 +98,10 @@ rnorm.between <- function(n, minimum = 0, maximum = 1) {
   
   return(x)
 }
+
+RMSE <- function(actual, predicted){
+  sqrt(mean((actual - predicted)^2))
+}
 ```
 
 #### Corona data
@@ -103,12 +110,12 @@ For at have noget data at arbejde med, så henter jeg data fra
 <https://api.covid19data.dk>, der er et API jeg har skabt, der løbende
 indeholder de tal myndighederne udgiver i deres daglige rapporter.
 
-Der er to datasæt vi er interesserede i:
+Der er to datasæt jeg er interesseret i:
 
-1)  det er datasættet for nyindlæggelser som vi skal bruge til at
+1)  det er datasættet for nyindlæggelser som jeg skal bruge til at
     udregne smittetrykket (R) med.
-2)  de reelle indlæggelses tal, som vi skal bruge både som inputværdier
-    til vores ligninger senere men også til at verificere dem med.
+2)  de reelle indlæggelses tal, som jeg skal bruge både som inputværdier
+    til mine ligninger senere men også til at verificere dem med.
 
 På begge datasæt laver jeg et rullende gennemsnit på fem dage. Det vil
 sige at en dato får gennemsnittet af sig selv, de to foregående dage,
@@ -153,26 +160,25 @@ hosp <- hosp_raw %>%
   summarise_at(c("hospitalized", "critical", "respirator"), sum, na.rm  = TRUE) %>%
   mutate(hospitalized_rm = rollmean(hospitalized, 5),
          critical_rm = rollmean(critical, 5),
-         respirator_rm = rollmean(respirator, 5)) %>%
-  drop_na()
+         respirator_rm = rollmean(respirator, 5))
 
 # Show first three and last three rows
 hosp %>% slice(1:3,((n()-2):n()))
 #> # A tibble: 6 x 7
 #>   date       hospitalized critical respirator hospitalized_rm critical_rm
 #>   <date>            <int>    <int>      <int>           <dbl>       <dbl>
-#> 1 2020-03-19          153       30         27            151.        30.2
-#> 2 2020-03-20          186       37         32            181.        35.8
-#> 3 2020-03-21          206       42         33            206.        42  
-#> 4 2020-05-08          205       42         35            201.        42  
-#> 5 2020-05-09          194       39         32            198.        41.4
-#> 6 2020-05-10          196       40         33            194         41.4
+#> 1 2020-03-17           82       18          0             NA         NA  
+#> 2 2020-03-18          129       24          0             NA         NA  
+#> 3 2020-03-19          153       30         27            151.        30.2
+#> 4 2020-05-10          196       40         33            194         41.4
+#> 5 2020-05-11          198       43         33             NA         NA  
+#> 6 2020-05-12          177       43         32             NA         NA  
 #> # … with 1 more variable: respirator_rm <dbl>
 ```
 
 #### Forudsig smittetrykket
 
-Nu er vi klar til at forudsige smittetrykket - også kaldet R.
+Nu er jeg klar til at forudsige smittetrykket - også kaldet R.
 
 Jeg har lånt dette tekst om R fra Statens Serum Institut:
 
@@ -249,7 +255,7 @@ R_estim$R %>%  as_tibble()
 ```
 
 Som du kan se viser den R-tallet samt en rækker usikkerheds intervaller.
-Det er nemmere at se grafisk, så derfor plotter jeg det så vi kan set
+Det er nemmere at se grafisk, så derfor plotter jeg det så jeg kan se
 det som en figur. Jeg zoomer ind på den del af figuren, der ligger efter
 2020-03-20, da det giver en bedre visuel fremstilling.
 
@@ -279,7 +285,7 @@ pd %>%
 ![](README_files/figure-gfm/estimate_r_plot-1.png)<!-- -->
 
 Som du kan se, så ser smittetrykket ud til nu at være 0.76 (0.64 ;
-0.89). Det er det smittetryk vi kan bruge til at fremskrive de danske
+0.89). Det er det smittetryk jeg kan bruge til at fremskrive de danske
 Corona tal med og derved lave en forudsigelse.
 
 #### SIR modellen
@@ -293,7 +299,7 @@ begynder at vise symptomer.
 
 I min forudsigelse her er jeg i princippet kun interesset
 hospitaliseringstallet. Det vil sige hvor mange, der kommer på
-hospitalet. Det skyldes at det er det mest reelle tal vi har, og derfor
+hospitalet. Det skyldes at det er det mest reelle tal jeg har, og derfor
 det bedste at basere modellen på og evaluere den på.
 
 Der er 4 kasser i min model:
@@ -307,7 +313,7 @@ I standard modeller bruger man ord som beta og gamma til at beskrive de
 forskellige rater som folk flytter mellem kasser på. Jeg har valgt at
 kalde dem nogle lidt andre ting, men principperne er de samme.
 
-Her kan I se, hvordan jeg har defineret den function vi skal bruge:
+Her kan I se, hvordan jeg har defineret den funktion jeg skal bruge:
 
 ``` r
 sir_ode <- function(times, init, parms){
@@ -334,7 +340,7 @@ De forskellige modelinputs bliver forklaret nu.
 
 #### Modelparametre og input
 
-Vores SIR-model skal have nogle parametre og nogle inputs for at virke.
+Min SIR-model skal have nogle parametre og nogle inputs for at virke.
 Parametrene er de værdier den skal bruge til at udregne for mange, der
 skal flytte mellem hver af kasserne og inputs er de startværdier som,
 der er i hver kasse.
@@ -374,7 +380,7 @@ deres fremlagte [Shiny app](https://kagr.shinyapps.io/C19DK/).
 `S2I` er raten folk bliver flyttet med fra S til I kassen. Altså hvor
 mange, der bliver smittede hver dag. Da det er syge, der smitter, så
 skal de nå at smitte inden de bliver raske. Smitteraten er altså R\_0
-(hvor mange hver person smitter) ganget med helbredelsesraten vi
+(hvor mange hver person smitter) ganget med helbredelsesraten jeg
 definerede ovenfor.
 
 `H2R` er raten folk bliver flyttet med fra H til R kassen. Altså når de
@@ -407,10 +413,10 @@ fortid og ikke helt tilbage fra epidemiens begyndelse.
 
 `I0` er hvor mange syge eller inficerede, der er til at begynde med. Det
 nyeste tal for ny-indlæggelser må være det nyeste tal for den rate,
-hvorved folk er rykket fra I til H kassen. Da vi antager at en fast
-andel ryger på hospitalet, så kan vi bruge dette tal til at udregne,
+hvorved folk er rykket fra I til H kassen. Da jeg antager at en fast
+andel ryger på hospitalet, så kan jeg bruge dette tal til at udregne,
 hvor mange, der for 8 dage siden rykkede fra S til I kassen. Ved at
-rykke lidt rundt på ligningen når vi frem til, at det er (nyeste
+rykke lidt rundt på ligningen når jeg frem til, at det er (nyeste
 indlagte / procent, der bliver indlagt) / smitteraten.
 
 `H0` er hvor mange der er er indlagt. Der er jeg nødt til at tage tallet
@@ -421,7 +427,7 @@ med den tid det tager fra man bliver syg til man bliver indlagt.
 gået bort. Denne sætter jeg til 0, da jeg primært er interesseret i
 indlæggelsestallene.
 
-Vi er i nu klar til at køre vores model.
+Jeg er i nu klar til at køre min model.
 
 #### Modellering
 
@@ -438,8 +444,8 @@ times <- 1:60
 sir_out <- ode(init, times, sir_ode, parms)
 ```
 
-Hvis vi ser nærmere på modellens output kan vi se at den indeholder
-værdierne for de enkelte “kasser” for hver dato. Vi kan altså se, hvor
+Hvis jeg ser nærmere på modellens output kan jeg se at den indeholder
+værdierne for de enkelte “kasser” for hver dato. Jeg kan altså se, hvor
 mange, der er indlagte på grund af Corona og hvor mange der vil være i
 den nærmeste fremtid.
 
@@ -468,9 +474,11 @@ sir_out_df
 #> # … with 50 more rows
 ```
 
-Da vi har forudsigelser samtidig med virkelige tal, så kan vi også
-visuelt vurdere, hvor god vores model har været på de tal vi kender, og
-hvad den prognosticerer for fremtiden.
+Da jeg har forudsigelser samtidigt med virkelige tal, så kan jeg også
+visuelt vurdere, hvor god min model har været på de tal jeg kender, og
+hvad den prognosticerer for fremtiden. I figuren nedenfor er den
+stiplede linje forudsigelsen punkterne er de reelle tal som jeg kender
+dem.
 
 ``` r
 
@@ -498,7 +506,181 @@ ggplot() +
 
 ![](README_files/figure-gfm/plot_model_output-1.png)<!-- -->
 
-## KOMMER
+Overordnet set, ser det ikke helt skørt ud, men jeg kan bruge
+forskellige metoder for at forbedre min model.
 
-Tuning af modellen så den bliver endnu bedre, samt tilføjelse af
-usikkerhedsparametre.
+#### Optimer modellen
+
+Min model tager forskellige parametre og inputs. Dem kan man ændre for
+at se om man får en bedre model. I min model er der 3 parametre jeg kan
+ændre på for at få et bedre fit:
+
+1)  Smittetrykket (R)
+2)  Tiden man er syg
+3)  Tiden man er indlagt på hospitalet
+
+Jeg kan forsøge mig frem med forskellige værdier af de tre parametre.
+Der er en indbygget funktion kaldet `optim` i det kodesprog jeg bruger
+(R), der kan hælpe mig med at optimere værdierne så jeg får det bedst
+mulige fit.
+
+Først skriver jeg en hjælper-funktion, der bruger forskellige værdier
+for de tre parametre og min `RMSE` sær-funktion til at beregne, hvor
+godt det passer med de virkelige tal vi kender.
+
+``` r
+hospitalized <- hosp %>% 
+  filter(date >= (newly_date - days2hosp)) %>% 
+  pull(hospitalized)
+
+times <- 1:length(hospitalized)
+
+optimiser <- function(parameters) {
+
+  I2R = 1 / parameters[1]
+  S2I = I2R * parameters[2]
+  H2R = 1 / parameters[3]
+  
+  parms <- c(N = N, S2I = S2I, I2R = I2R, I2H = I2H, Hpct = Hpct, H2R = H2R)
+  
+  sir_out <- ode(init, times, sir_ode, parms)
+  
+  fit <- sir_out[,"H"]
+  
+  rmse <- RMSE(fit, hospitalized)
+
+  rmse
+}
+```
+
+Denne hjælper funktion kan jeg så fodre til `optim` funktionen sammen
+med forskellige tal. Jeg fortæller optimeringsfunktionen at den skal
+optimere ved at ændre vores tre parametre inden for en defineret ramme:
+
+1)  Smittetrykket (R): start med 0.7628818, min er 0.6410602, max er
+    0.8934959
+2)  Tiden man er syg: start ved 5 dage, min er 2 dage, max er 8 dage
+3)  Tiden man er indlagt på hospitalet: start ved 15 dage, min er 12
+    dage, max er 18 dage
+
+<!-- end list -->
+
+``` r
+Opt <- optim(c(5, anno$R, 15),
+             optimiser,
+             method = "L-BFGS-B",
+             lower = c(2, anno$lower, 12),
+             upper = c(8, anno$upper, 18)
+)
+```
+
+Så tjekker jeg om optimeringen konvergerede.
+
+``` r
+# check for convergence
+Opt$message
+#> [1] "CONVERGENCE: REL_REDUCTION_OF_F <= FACTR*EPSMCH"
+```
+
+``` r
+new_parms <- Opt$par
+names(new_parms) <- c("days_sick", "R0", "days_in_hosp")
+new_parms
+#>    days_sick           R0 days_in_hosp 
+#>    5.7486755    0.8934959   15.5647809
+```
+
+Det bedste fit ser ud til at være med en gennemsnitlig indlæggelsestid
+på 15.5647809, et smittetryk på 0.8934959 og en sygeperiode på
+5.7486755 dage.
+
+Nu kører jeg min Corona model igen, men med det nye tal for
+indlæggelsesdage og smittetryk.
+
+``` r
+
+I2R = 1 / new_parms[["days_sick"]]
+H2R = 1 / new_parms[["days_in_hosp"]]
+
+parms <- c(N = N, I2H = I2H, Hpct = Hpct,
+           I2R = I2R,
+           S2I = new_parms[["R0"]] * I2R,
+           H2R = H2R)
+
+init <- c(S = S0, I = I0, H = H0, R = R0) 
+
+times <- 1:60
+
+sir_out <- ode(init, times, sir_ode, parms)
+
+sir_out_df <- sir_out %>% as.data.frame() %>% 
+  as_tibble()
+
+sir_out_df$date <- (sir_out_df$time - 1) + (newly_date - days2hosp)
+
+sir_out_df <- sir_out_df %>% select(date, time, S, I, H, R)
+
+pd <- sir_out_df %>% 
+  select(date, H) %>%
+  left_join(hosp, by = "date") %>%
+  select(date, H, hospitalized) 
+
+ggplot() + 
+  
+  # Hospital
+  geom_line(data = pd, aes(date, H), linetype = "dashed", color = "blue") + 
+  geom_point(data = pd, aes(date, hospitalized), color = "blue") +
+  
+    # Aesthetics
+  theme_minimal() + 
+  scale_x_date(breaks = "weeks", labels = scales::date_format("%d-%m")) +
+  theme(panel.grid = element_blank()) +
+  
+  # Labels
+  labs(y = "Indlagte på hospitalet",
+       x = "")
+```
+
+![](README_files/figure-gfm/optimized_model-1.png)<!-- -->
+
+Og som det ses passer denne model bedre end den jeg lavede før.
+
+#### Tallet for inficerede
+
+Som en del af modellen regnede jeg også tallet for inficerede. Lad os se
+en figur over det tal også:
+
+``` r
+pdi <- sir_out_df %>% 
+  select(date, I)
+
+ggplot() + 
+  
+  # Infected
+  geom_line(data = pdi, aes(date, I), linetype = "dashed", color = "orange") + 
+
+    # Aesthetics
+  theme_minimal() + 
+  scale_x_date(breaks = "weeks", labels = scales::date_format("%d-%m")) +
+  theme(panel.grid = element_blank()) +
+  
+  # Labels
+  labs(y = "Inficerede danskere",
+       x = "")
+```
+
+![](README_files/figure-gfm/plot_inf-1.png)<!-- -->
+
+Ifølge denne beregning er der ca. 2668 syge danskere lige nu (skrivende
+stund: 2020-05-13) eller ca. 0.046 % af befolkningen - og tallet er
+faldende.
+
+#### Konklusion
+
+Dette er én måde at beregne Corona tal på ved hjælp af den såkaldte SIR
+model type. Som du har set i dette skriv, så er der forskellige
+parametre, der går ind i modellen og ved at ændre dem kan man optimere
+sin model så den passer bedre til de data man rent faktisk er sikre på.
+
+Jeg håber du kunne bruge dette til noget og jeg modtager gerne feedback,
+ris, ros og ændringsforslag.
