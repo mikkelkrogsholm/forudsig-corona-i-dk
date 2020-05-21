@@ -114,18 +114,16 @@ newly %>% slice(1:3,((n()-2):n()))
 
 ```{r coronadata_hosp}
 # Get current total hospitalized
-url_hosp <- "https://api.covid19data.dk/ssi_hospitalized"
+url_cases <- "https://api.covid19data.dk/ssi_cases"
 
-hosp_raw <- jsonlite::fromJSON(url_hosp)
+cases_raw <- jsonlite::fromJSON(url_cases) %>% as_tibble()
 
-hosp <- hosp_raw %>% 
+hosp <- cases_raw %>% 
   mutate(timestamp = timestamp %>% lubridate::ymd_hm(),
          date = timestamp %>% as.Date()) %>%
-  group_by(date) %>%
-  summarise_at(c("hospitalized", "critical", "respirator"), sum, na.rm  = TRUE) %>%
-  mutate(hospitalized_rm = rollmean(hospitalized, 5),
-         critical_rm = rollmean(critical, 5),
-         respirator_rm = rollmean(respirator, 5))
+  select(date, hospitalized = hospitalized_today) %>%
+  drop_na() %>%
+  mutate(hospitalized_rm = rollmean(hospitalized, 5))
 
 # Show first three and last three rows
 hosp %>% slice(1:3,((n()-2):n()))
@@ -491,8 +489,6 @@ ggplot() +
 ```{r sick_now, include=FALSE}
 Idk = sir_out_df %>% filter(date == Sys.Date()) %>% pull(I)
 Idk <- round(Idk)
-
-
 ```
 
 Ifølge denne beregning er der ca. `r Idk` syge danskere lige nu (skrivende stund: `r Sys.Date()`) eller ca. `r (Idk / N) * 100` % af befolkningen - og tallet er faldende.

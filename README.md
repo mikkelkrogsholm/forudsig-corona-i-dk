@@ -138,44 +138,42 @@ newly <- newly_raw %>%
 
 # Show first three and last three rows
 newly %>% slice(1:3,((n()-2):n()))
-#> # A tibble: 6 x 3
-#>   date       newly_hospitalized rollingmean
-#>   <date>                  <int>       <dbl>
-#> 1 2020-02-27                  0         0  
-#> 2 2020-02-28                  0         0.2
-#> 3 2020-02-29                  0         0.2
-#> 4 2020-05-03                 13        14.4
-#> 5 2020-05-04                 11        12.4
-#> 6 2020-05-05                 12        10.8
+#> # A tibble: 6 x 8
+#>   date       newly_hospitali… hovedstaden sjælland syddanmark midtjylland
+#>   <date>                <int>       <int>    <int>      <int>       <int>
+#> 1 2020-03-03                1           1        0          0           0
+#> 2 2020-03-04                0           0        0          0           0
+#> 3 2020-03-05                1           1        0          0           0
+#> 4 2020-05-11                8           6        1          1           0
+#> 5 2020-05-12                7           6        0          0           1
+#> 6 2020-05-13                6           4        2          0           0
+#> # … with 2 more variables: nordjylland <int>, rollingmean <dbl>
 ```
 
 ``` r
 # Get current total hospitalized
-url_hosp <- "https://api.covid19data.dk/ssi_hospitalized"
+url_cases <- "https://api.covid19data.dk/ssi_cases"
 
-hosp_raw <- jsonlite::fromJSON(url_hosp)
+cases_raw <- jsonlite::fromJSON(url_cases) %>% as_tibble()
 
-hosp <- hosp_raw %>% 
+hosp <- cases_raw %>% 
   mutate(timestamp = timestamp %>% lubridate::ymd_hm(),
          date = timestamp %>% as.Date()) %>%
-  group_by(date) %>%
-  summarise_at(c("hospitalized", "critical", "respirator"), sum, na.rm  = TRUE) %>%
-  mutate(hospitalized_rm = rollmean(hospitalized, 5),
-         critical_rm = rollmean(critical, 5),
-         respirator_rm = rollmean(respirator, 5))
+  select(date, hospitalized = hospitalized_today) %>%
+  drop_na() %>%
+  mutate(hospitalized_rm = rollmean(hospitalized, 5))
 
 # Show first three and last three rows
 hosp %>% slice(1:3,((n()-2):n()))
-#> # A tibble: 6 x 7
-#>   date       hospitalized critical respirator hospitalized_rm critical_rm
-#>   <date>            <int>    <int>      <int>           <dbl>       <dbl>
-#> 1 2020-03-17           82       18          0             NA         NA  
-#> 2 2020-03-18          129       24          0             NA         NA  
-#> 3 2020-03-19          153       30         27            151.        30.2
-#> 4 2020-05-10          196       40         33            194         41.4
-#> 5 2020-05-11          198       43         33             NA         NA  
-#> 6 2020-05-12          177       43         32             NA         NA  
-#> # … with 1 more variable: respirator_rm <dbl>
+#> # A tibble: 6 x 3
+#>   date       hospitalized hospitalized_rm
+#>   <date>            <int>           <dbl>
+#> 1 2020-03-17           82             NA 
+#> 2 2020-03-18          129             NA 
+#> 3 2020-03-19          153            151.
+#> 4 2020-05-19          141            133.
+#> 5 2020-05-20          127             NA 
+#> 6 2020-05-21          122             NA
 ```
 
 #### Forudsig smittetrykket
@@ -238,20 +236,20 @@ R_estim <- estimate_R(confirmed_cases,
 
 # Print oout the R table for inspection
 R_estim$R %>%  as_tibble()
-#> # A tibble: 62 x 11
+#> # A tibble: 65 x 11
 #>    t_start t_end `Mean(R)` `Std(R)` `Quantile.0.025… `Quantile.0.05(…
 #>      <dbl> <dbl>     <dbl>    <dbl>            <dbl>            <dbl>
-#>  1       2     8      4.71    2.07              1.57             1.90
-#>  2       3     9      4.03    1.57              1.57             1.84
-#>  3       4    10      4.17    1.33              1.98             2.24
-#>  4       5    11      4.67    1.18              2.65             2.91
-#>  5       6    12      4.57    0.962             2.89             3.11
-#>  6       7    13      4.39    0.765             3.02             3.22
-#>  7       8    14      4.17    0.606             3.06             3.22
-#>  8       9    15      3.82    0.476             2.94             3.07
-#>  9      10    16      3.45    0.375             2.75             2.86
-#> 10      11    17      3.17    0.302             2.61             2.69
-#> # … with 52 more rows, and 5 more variables: `Quantile.0.25(R)` <dbl>,
+#>  1       2     8      4.92    0.856             3.38             3.60
+#>  2       3     9      4.43    0.643             3.26             3.43
+#>  3       4    10      3.95    0.490             3.05             3.18
+#>  4       5    11      3.51    0.380             2.81             2.91
+#>  5       6    12      3.21    0.304             2.64             2.72
+#>  6       7    13      2.93    0.247             2.46             2.53
+#>  7       8    14      2.67    0.204             2.29             2.35
+#>  8       9    15      2.45    0.171             2.13             2.18
+#>  9      10    16      2.26    0.145             1.98             2.02
+#> 10      11    17      2.05    0.124             1.81             1.85
+#> # … with 55 more rows, and 5 more variables: `Quantile.0.25(R)` <dbl>,
 #> #   `Median(R)` <dbl>, `Quantile.0.75(R)` <dbl>, `Quantile.0.95(R)` <dbl>,
 #> #   `Quantile.0.975(R)` <dbl>
 ```
@@ -286,7 +284,7 @@ pd %>%
 
 ![](README_files/figure-gfm/estimate_r_plot-1.png)<!-- -->
 
-Som du kan se, så ser smittetrykket ud til nu at være 0.76 (0.64 ;
+Som du kan se, så ser smittetrykket ud til nu at være 0.73 (0.59 ;
 0.89). Det er det smittetryk jeg kan bruge til at fremskrive de danske
 Corona tal med og derved lave en forudsigelse.
 
@@ -463,16 +461,16 @@ sir_out_df
 #> # A tibble: 60 x 6
 #>    date        time        S     I     H     R
 #>    <date>     <dbl>    <dbl> <dbl> <dbl> <dbl>
-#>  1 2020-04-27     1 5800000  3539.  287.    0 
-#>  2 2020-04-28     2 5799472. 3380.  277.  697.
-#>  3 2020-04-29     3 5798968. 3229.  267. 1362.
-#>  4 2020-04-30     4 5798487. 3084.  258. 1998.
-#>  5 2020-05-01     5 5798027. 2945.  248. 2606.
-#>  6 2020-05-02     6 5797588. 2813.  239. 3186.
-#>  7 2020-05-03     7 5797169. 2686.  230. 3741.
-#>  8 2020-05-04     8 5796769. 2565.  222. 4270.
-#>  9 2020-05-05     9 5796386. 2450.  214. 4776.
-#> 10 2020-05-06    10 5796021. 2340.  206. 5260.
+#>  1 2020-05-05     1 5800000  3474.  226.    0 
+#>  2 2020-05-06     2 5799503. 3299.  220.  678.
+#>  3 2020-05-07     3 5799031. 3133.  213. 1323.
+#>  4 2020-05-08     4 5798583. 2975.  207. 1935.
+#>  5 2020-05-09     5 5798157. 2825.  201. 2517.
+#>  6 2020-05-10     6 5797753. 2682.  194. 3070.
+#>  7 2020-05-11     7 5797370. 2547.  188. 3595.
+#>  8 2020-05-12     8 5797006. 2419.  182. 4094.
+#>  9 2020-05-13     9 5796660. 2296.  176. 4568.
+#> 10 2020-05-14    10 5796331. 2181.  170. 5018.
 #> # … with 50 more rows
 ```
 
@@ -559,8 +557,8 @@ Denne hjælper funktion kan jeg så fodre til `optim` funktionen sammen
 med forskellige tal. Jeg fortæller optimeringsfunktionen at den skal
 optimere ved at ændre vores tre parametre inden for en defineret ramme:
 
-1)  Smittetrykket (R): start med 0.7628818, min er 0.6410602, max er
-    0.8934959
+1)  Smittetrykket (R): start med 0.7340157, min er 0.5945764, max er
+    0.8856116
 2)  Tiden man er syg: start ved 5 dage, min er 2 dage, max er 8 dage
 3)  Tiden man er indlagt på hospitalet: start ved 15 dage, min er 12
     dage, max er 18 dage
@@ -589,12 +587,12 @@ new_parms <- Opt$par
 names(new_parms) <- c("days_sick", "R0", "days_in_hosp")
 new_parms
 #>    days_sick           R0 days_in_hosp 
-#>    5.7486755    0.8934959   15.5647809
+#>    3.9179782    0.8351483   12.9188671
 ```
 
 Det bedste fit ser ud til at være med en gennemsnitlig indlæggelsestid
-på 15.5647809, et smittetryk på 0.8934959 og en sygeperiode på
-5.7486755 dage.
+på 12.9188671, et smittetryk på 0.8351483 og en sygeperiode på
+3.9179782 dage.
 
 Nu kører jeg min Corona model igen, men med det nye tal for
 indlæggelsesdage og smittetryk.
@@ -673,8 +671,8 @@ ggplot() +
 
 ![](README_files/figure-gfm/plot_inf-1.png)<!-- -->
 
-Ifølge denne beregning er der ca. 2668 syge danskere lige nu (skrivende
-stund: 2020-05-13) eller ca. 0.046 % af befolkningen - og tallet er
+Ifølge denne beregning er der ca. 1842 syge danskere lige nu (skrivende
+stund: 2020-05-21) eller ca. 0.0317586 % af befolkningen - og tallet er
 faldende.
 
 #### Konklusion
